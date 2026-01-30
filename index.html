@@ -54,12 +54,36 @@
         .compliment {
             margin: 20px 0;
             font-weight: 500;
-            min-height: 100px; /* Consistent height */
+            min-height: 120px; /* Fixed height for consistency */
+            max-height: 180px; /* Prevents overflow */
+            overflow: hidden; /* Hides overflow */
             display: flex;
             justify-content: center;
             align-items: center;
             animation: fadeIn 0.5s ease;
             font-size: 1.2em; /* Increase font size for better visibility */
+            background: linear-gradient(to right, #38BDF8, #22C55E);
+            color: #F8FAFC;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            position: relative; /* For decorative elements */
+        }
+        .compliment::before {
+            content: "💬";
+            font-size: 2em;
+            position: absolute;
+            top: 5px;
+            left: 10px;
+            opacity: 0.7; /* Subtle icon */
+        }
+        .compliment::after {
+            content: "✨";
+            font-size: 2em;
+            position: absolute;
+            bottom: 5px;
+            right: 10px;
+            opacity: 0.7; /* Subtle icon */
         }
         .toast {
             display: none;
