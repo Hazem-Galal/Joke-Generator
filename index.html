@@ -1,640 +1,351 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Compliment + Joke Generator</title>
-
-  <!-- Font Awesome icons -->
-  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
-
-  <style>
-    :root{
-      /* Poker playing card ratio ~ 5:7 */
-      --card-w: 360px;
-      --card-h: 504px;
-
-      --card-radius: 22px;
-      --card-bg: rgba(255,255,255,0.10);
-      --card-border: rgba(255,255,255,0.22);
-      --text: rgba(255,255,255,0.92);
-      --muted: rgba(255,255,255,0.72);
-    }
-
-    *{ box-sizing: border-box; }
-    html, body { height: 100%; }
-
-    body{
-      margin: 0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans",
-                   "Apple Color Emoji","Segoe UI Emoji";
-      color: var(--text);
-      overflow-x: hidden;
-
-      /* Animated gradient background */
-      background: linear-gradient(120deg, #0b1220, #151b2c, #0e2b2b, #1b1240, #0b1220);
-      background-size: 420% 420%;
-      animation: bgShift 14s ease infinite;
-      position: relative;
-    }
-
-    @keyframes bgShift{
-      0% { background-position: 0% 50%; }
-      50%{ background-position: 100% 50%; }
-      100%{ background-position: 0% 50%; }
-    }
-
-    /* Soft floating glow blobs */
-    body::before,
-    body::after{
-      content:"";
-      position:absolute;
-      inset:-120px;
-      pointer-events:none;
-      background:
-        radial-gradient(400px 260px at 12% 20%, rgba(255, 99, 132, 0.18), transparent 70%),
-        radial-gradient(420px 300px at 82% 25%, rgba(54, 162, 235, 0.18), transparent 70%),
-        radial-gradient(500px 340px at 55% 78%, rgba(255, 206, 86, 0.14), transparent 70%);
-      filter: blur(2px);
-      animation: floatBlobs 10s ease-in-out infinite alternate;
-      z-index: 0;
-    }
-    body::after{
-      background:
-        radial-gradient(420px 320px at 18% 72%, rgba(75, 192, 192, 0.14), transparent 70%),
-        radial-gradient(500px 360px at 86% 72%, rgba(153, 102, 255, 0.14), transparent 70%);
-      animation-duration: 12s;
-      opacity: 0.9;
-    }
-
-    @keyframes floatBlobs{
-      from{ transform: translate3d(0,0,0) scale(1); }
-      to{ transform: translate3d(12px,-10px,0) scale(1.03); }
-    }
-
-    .page{
-      min-height: 100%;
-      display: grid;
-      place-items: center;
-      padding: 28px 16px 34px;
-      position: relative;
-      z-index: 1;
-    }
-
-    .wrap{
-      display: grid;
-      gap: 18px;
-      place-items: center;
-      max-width: 900px;
-      width: 100%;
-    }
-
-    .title{
-      text-align: center;
-      line-height: 1.1;
-      margin: 0;
-      font-size: clamp(22px, 3.2vw, 34px);
-      letter-spacing: 0.2px;
-    }
-
-    .subtitle{
-      margin: 0;
-      text-align: center;
-      color: var(--muted);
-      font-size: 14px;
-      max-width: 62ch;
-    }
-
-    /* Playing card */
-    .card{
-      width: var(--card-w);
-      height: var(--card-h);
-      border-radius: var(--card-radius);
-      border: 1px solid var(--card-border);
-      background: var(--card-bg);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      box-shadow:
-        0 18px 60px rgba(0,0,0,0.45),
-        0 0 0 1px rgba(255,255,255,0.08) inset;
-      position: relative;
-      overflow: hidden;
-      transform: translateZ(0);
-    }
-
-    .card::before{
-      content:"";
-      position:absolute;
-      inset: 0;
-      background:
-        radial-gradient(1200px 500px at 20% 0%, rgba(255,255,255,0.10), transparent 50%),
-        radial-gradient(800px 400px at 100% 80%, rgba(255,255,255,0.08), transparent 55%),
-        linear-gradient(135deg, rgba(255,255,255,0.04), transparent 55%);
-      opacity: 0.9;
-      pointer-events:none;
-    }
-
-    .corner{
-      position:absolute;
-      width: 92px;
-      height: 92px;
-      border-radius: 50%;
-      display: grid;
-      place-items: center;
-      box-shadow:
-        0 12px 24px rgba(0,0,0,0.35),
-        0 0 0 1px rgba(255,255,255,0.18) inset;
-      transition: background 260ms ease, transform 260ms ease;
-      user-select: none;
-      z-index: 2;
-    }
-
-    .corner i, .corner span{
-      font-size: 30px;
-      filter: drop-shadow(0 8px 18px rgba(0,0,0,0.30));
-    }
-
-    .corner.top-right{ top: 18px; right: 18px; }
-    .corner.bottom-left{ bottom: 18px; left: 18px; }
-
-    .content{
-      position: relative;
-      height: 100%;
-      padding: 112px 22px 110px;
-      display: grid;
-      grid-template-rows: auto 1fr auto;
-      gap: 10px;
-      z-index: 3;
-    }
-
-    .badge{
-      justify-self: center;
-      font-size: 12px;
-      color: rgba(255,255,255,0.78);
-      border: 1px solid rgba(255,255,255,0.18);
-      padding: 6px 10px;
-      border-radius: 999px;
-      background: rgba(0,0,0,0.18);
-    }
-
-    .output{
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-
-      /* fixed area so text never changes card size */
-      min-height: 220px;
-      padding: 10px 6px;
-    }
-
-    .text{
-      font-size: 22px;
-      line-height: 1.35;
-      letter-spacing: 0.2px;
-      margin: 0;
-
-      opacity: 1;
-      transform: translateY(0);
-      transition: opacity 220ms ease, transform 220ms ease;
-    }
-
-    .text.fadeOut{
-      opacity: 0;
-      transform: translateY(8px);
-    }
-
-    .punchline{
-      display: block;
-      margin-top: 10px;
-      font-size: 18px;
-      color: rgba(255,255,255,0.86);
-      opacity: 0;
-      transform: translateY(6px);
-      transition: opacity 240ms ease, transform 240ms ease;
-    }
-
-    .punchline.show{
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .meta{
-      text-align: center;
-      color: rgba(255,255,255,0.72);
-      font-size: 13px;
-      line-height: 1.35;
-      padding: 0 8px;
-    }
-    .meta strong{ color: rgba(255,255,255,0.90); }
-
-    /* Buttons OUTSIDE card */
-    .controls{
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-
-    button{
-      appearance: none;
-      border: 1px solid rgba(255,255,255,0.22);
-      background: rgba(255,255,255,0.10);
-      color: rgba(255,255,255,0.92);
-      padding: 12px 16px;
-      border-radius: 14px;
-      font-weight: 650;
-      letter-spacing: 0.2px;
-      cursor: pointer;
-      transition: transform 140ms ease, background 140ms ease, border-color 140ms ease;
-      min-width: 170px;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.22);
-    }
-
-    button:hover{
-      transform: translateY(-1px);
-      border-color: rgba(255,255,255,0.32);
-      background: rgba(255,255,255,0.14);
-    }
-
-    button:active{
-      transform: translateY(0px) scale(0.99);
-    }
-
-    button:focus-visible{
-      outline: 3px solid rgba(255,255,255,0.30);
-      outline-offset: 3px;
-    }
-
-    .hint{
-      font-size: 12px;
-      color: rgba(255,255,255,0.68);
-      text-align: center;
-      margin: 0;
-    }
-
-    @media (max-width: 420px){
-      :root{
-        --card-w: 320px;
-        --card-h: 448px;
-      }
-      .text{ font-size: 20px; }
-      button{ min-width: 150px; }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compliment Generator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0F172A, #1E3A8A);
+            color: #F8FAFC;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+            text-align: center;
+        }
+        h1 {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        .container {
+            background: #111827;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            width: 300px;
+            transition: all 0.3s ease;
+        }
+        .container:hover {
+            transform: scale(1.02);
+        }
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            font-family: 'Inter', sans-serif;
+        }
+        button {
+            background-color: #38BDF8;
+            color: #F8FAFC;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #22C55E;
+        }
+        .compliment {
+            margin: 20px 0;
+            font-weight: 500;
+            min-height: 120px; /* Fixed height for consistency */
+            max-height: 180px; /* Prevents overflow */
+            overflow: hidden; /* Hides overflow */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.5s ease;
+            font-size: 1.2em; /* Increase font size for better visibility */
+            background: linear-gradient(to right, #38BDF8, #22C55E);
+            color: #F8FAFC;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            position: relative; /* For decorative elements */
+        }
+        .compliment::before {
+            content: "💬";
+            font-size: 2em;
+            position: absolute;
+            top: 5px;
+            left: 10px;
+            opacity: 0.7; /* Subtle icon */
+        }
+        .compliment::after {
+            content: "✨";
+            font-size: 2em;
+            position: absolute;
+            bottom: 5px;
+            right: 10px;
+            opacity: 0.7; /* Subtle icon */
+        }
+        .toast {
+            display: none;
+            background: #38BDF8;
+            color: #F8FAFC;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            transition: opacity 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @media (max-width: 400px) {
+            .container {
+                width: 90%;
+            }
+        }
+    </style>
 </head>
-
 <body>
-  <main class="page">
-    <div class="wrap">
-      <h1 class="title">Compliments & Jokes</h1>
-      <p class="subtitle">
-        Fixed-size playing card UI, no layout shift. Two corner badges change every click.
-        100 compliments + 50 family-friendly jokes.
-      </p>
-
-      <section class="card" aria-live="polite" aria-label="Generator card">
-        <div class="corner top-right" id="cornerTR" aria-hidden="true"></div>
-        <div class="corner bottom-left" id="cornerBL" aria-hidden="true"></div>
-
-        <div class="content">
-          <div class="badge" id="modeBadge">Ready</div>
-
-          <div class="output">
-            <p class="text" id="outputText">
-              Click a button below to generate a compliment or a joke.
-              <span class="punchline" id="punchline"></span>
-            </p>
-          </div>
-
-          <div class="meta" id="meta">
-            <strong>Tip:</strong> Press <strong>C</strong> for compliment, <strong>J</strong> for joke.
-          </div>
-        </div>
-      </section>
-
-      <div class="controls" aria-label="Controls">
-        <button id="btnCompliment" type="button">Generate Compliment</button>
-        <button id="btnJoke" type="button">Generate Joke</button>
-      </div>
-
-      <p class="hint">No repeats until the list cycles. Punchlines animate in automatically.</p>
+    <div class="container">
+        <h1>Compliment Generator</h1>
+        <input type="text" id="name" placeholder="Name (optional)" aria-label="Name" />
+        <select id="recipient" aria-label="Who is this for?">
+            <option value="">Who is this for?</option>
+            <option value="Developer">Developer</option>
+            <option value="Designer">Designer</option>
+            <option value="Student">Student</option>
+            <option value="Manager">Manager</option>
+            <option value="Friend">Friend</option>
+        </select>
+        <select id="tone" aria-label="Tone">
+            <option value="">Tone</option>
+            <option value="Professional">Professional</option>
+            <option value="Friendly">Friendly</option>
+            <option value="Playful">Playful</option>
+        </select>
+        <select id="focus" aria-label="Focus">
+            <option value="">Focus</option>
+            <option value="Skills">Skills</option>
+            <option value="Effort">Effort</option>
+            <option value="Creativity">Creativity</option>
+            <option value="Leadership">Leadership</option>
+            <option value="Kindness">Kindness</option>
+        </select>
+        <button id="generateBtn">Generate Compliment</button>
+        <div class="compliment" id="compliment">😄 Your compliment will appear here!</div>
+        <button id="regenerateBtn" style="display:none;">Regenerate</button>
+        <button id="copyBtn" style="display:none;">Copy to Clipboard</button>
+        <button id="saveBtn" style="display:none;">Save Favorite</button>
+        <div class="toast" id="toast">Copied to clipboard!</div>
+        <div class="favorites" id="favorites"></div>
     </div>
-  </main>
 
-  <script>
-    // ---------- Data ----------
-    const compliments = [
-      "You make complicated things feel oddly manageable.",
-      "You have “calm in the chaos” energy.",
-      "If competence were contagious, you’d be a public service announcement.",
-      "You’re the kind of person people trust after one conversation.",
-      "Your ideas land smoother than expected—and stick longer too.",
-      "You have great timing, and not just comedically.",
-      "You somehow make effort look effortless.",
-      "You bring clarity where others bring noise.",
-      "You’d be excellent at explaining things to future humans.",
-      "Your curiosity is doing you a lot of favors.",
-      "You’re quietly impressive, which is the best kind.",
-      "You ask better questions than most people answer.",
-      "You have strong “knows what they’re doing” vibes.",
-      "You make progress even when conditions aren’t ideal.",
-      "You’re surprisingly good at figuring things out.",
-      "Your focus could probably intimidate distractions.",
-      "You have a talent for improving whatever you touch.",
-      "You make smart choices more often than you realize.",
-      "You’d be a great person to brainstorm with at 2 a.m.",
-      "You handle responsibility like a pro.",
-      "You have excellent follow-through.",
-      "You’re more prepared than you let on.",
-      "Your thinking has depth and direction.",
-      "You make learning look rewarding.",
-      "You’re the opposite of careless.",
-      "You notice details that actually matter.",
-      "You’d be hard to replace—and that says a lot.",
-      "You balance logic and creativity well.",
-      "You’re someone people trust with important things.",
-      "You bring a steady kind of confidence.",
-      "You’re better at this than you think.",
-      "You have strong “future success” energy.",
-      "You make good decisions under pressure.",
-      "You’re impressively consistent.",
-      "You improve systems just by being in them.",
-      "You’re very good at making things make sense.",
-      "You have a practical kind of intelligence.",
-      "You’re good at turning ideas into action.",
-      "You’re reliable without being boring.",
-      "You make progress even on slow days.",
-      "You’re sharper than most people notice at first.",
-      "You adapt faster than you give yourself credit for.",
-      "You have solid instincts.",
-      "You bring structure where it’s needed most.",
-      "You’re good at learning from experience.",
-      "You’re quietly ambitious—and it shows.",
-      "You make thoughtful choices.",
-      "You have a strong sense of direction.",
-      "You don’t just react—you respond.",
-      "You have excellent judgment.",
-      "You’re good at solving the right problems.",
-      "You think things through better than average.",
-      "You make steady progress look easy.",
-      "You’re someone people count on.",
-      "You bring clarity to uncertainty.",
-      "You’re disciplined in a smart way.",
-      "You have a knack for figuring things out.",
-      "You’re more capable than you realize.",
-      "You stay composed when it matters.",
-      "You’re surprisingly resourceful.",
-      "You make learning feel worthwhile.",
-      "You have strong problem-solving instincts.",
-      "You’re good at connecting ideas.",
-      "You’re effective without being flashy.",
-      "You make good use of your time.",
-      "You’re thoughtful in how you approach challenges.",
-      "You have a clear sense of priorities.",
-      "You improve with experience—and quickly.",
-      "You’re better prepared than most.",
-      "You handle complexity well.",
-      "You’re dependable in ways that matter.",
-      "You think ahead.",
-      "You’re good at making progress without rushing.",
-      "You bring balance to tough situations.",
-      "You’re surprisingly resilient.",
-      "You have strong analytical instincts.",
-      "You’re good at adjusting when plans change.",
-      "You don’t waste effort.",
-      "You’re focused in a productive way.",
-      "You make good things better.",
-      "You’re efficient without cutting corners.",
-      "You have a solid internal compass.",
-      "You’re good at recognizing what matters.",
-      "You stay steady when things get tricky.",
-      "You learn fast—and apply it well.",
-      "You’re a strong finisher.",
-      "You bring intention to your work.",
-      "You’re more insightful than you let on.",
-      "You make smart trade-offs.",
-      "You’re consistently improving.",
-      "You have excellent follow-up instincts.",
-      "You make thoughtful progress.",
-      "You handle responsibility well.",
-      "You’re good at simplifying complexity.",
-      "You bring a calm confidence.",
-      "You’re better than average at a lot of things.",
-      "You make growth look natural.",
-      "You’re quietly very capable.",
-      "You’re on a solid trajectory.",
-      "You’re doing better than you think."
-    ];
+    <script>
+        const compliments = [
+            "You're doing a great job! 🌟",
+            "Your creativity is inspiring! 🎨",
+            "You have amazing problem-solving skills! 🧩",
+            "Your leadership makes a difference! 👑",
+            "You're a kind and thoughtful person! 💖",
+            "Your effort is truly commendable! 💪",
+            "You're an asset to the team! 🏆",
+            "Your work ethic is admirable! 📈",
+            "You're skilled at making things happen! 🚀",
+            "Your positivity is contagious! ☀️",
+            "You shine brighter than the stars! ✨",
+            "You could win an award for being awesome! 🏅",
+            "You're like a breath of fresh air! 🌬️",
+            "Your smile is a ray of sunshine! ☀️",
+            "You make the world a better place! 🌍",
+            "You have a heart of gold! 💛",
+            "You're more than enough! 💯",
+            "You're a delightful person to be around! 😊",
+            "You have a great sense of humor! 😂",
+            "You're a treasure! 💎",
+            "You light up the room! 💡",
+            "You're incredibly talented! 🎉",
+            "You have a knack for making people feel special! 🎈",
+            "You're a rock star! 🎸",
+            "You have a unique perspective! 👀",
+            "You're a game-changer! 🎮",
+            "You're the reason we smile! 😄",
+            "You have a wonderful imagination! 🌈",
+            "You're a joy to work with! 😁",
+            "You make everything better! 🍀",
+            "You are the epitome of kindness! 🌼",
+            "You have a remarkable ability to listen! 👂",
+            "You're never afraid to be yourself! 🙌",
+            "You are a beacon of hope! 🌅",
+            "You're a true friend! 🤗",
+            "You have a gift for making others feel valued! 🎁",
+            "Your laughter is music to my ears! 🎶",
+            "You're an inspiration! 🌟",
+            "You're a true gem! 💖",
+            "Your ideas are out of this world! 🌌",
+            "You're a ray of sunshine on a cloudy day! 🌥️",
+            "You always know how to make me smile! 😊",
+            "You're a breath of fresh air! 🌬️",
+            "You're a shining example of excellence! 🏆",
+            "You're a wonderfully kind person! 💝",
+            "You bring joy wherever you go! 🎊",
+            "You have a talent for making people feel at ease! ☕",
+            "You're full of great ideas! 💡",
+            "You have the ability to brighten anyone's day! ☀️",
+            "You are a wonderful human being! 🌻",
+            "You're a master of your craft! 🎨",
+            "Your enthusiasm is infectious! 🎉",
+            "You're an exceptional individual! 🌟",
+            "You have an amazing ability to connect with others! 🤝",
+            "You are a natural leader! 👩‍💼",
+            "You're an inspiration to everyone around you! 💪",
+            "You have a great taste in music! 🎶",
+            "Your presence is a gift! 🎁",
+            "You make the world a brighter place! 🌈",
+            "You're an amazing friend! 👭",
+            "You have a great sense of style! 👗",
+            "You're a true artist! 🎨",
+            "You have a unique way of seeing the world! 🌍",
+            "You're a fantastic communicator! 🗣️",
+            "You're a natural problem solver! 🔍",
+            "You have a great sense of adventure! 🧗",
+            "You're a great listener! 👂",
+            "You have an amazing ability to inspire others! 🌟",
+            "You're a great collaborator! 🤝",
+            "You bring out the best in others! 🌼",
+            "You're a wonderful storyteller! 📖",
+            "You have a beautiful soul! 🌹",
+            "You're a fantastic mentor! 👩‍🏫",
+            "You have a talent for making things happen! 🚀",
+            "You're a true innovator! 💡",
+            "You have a great sense of humor! 😄",
+            "You're a master of your craft! 🛠️",
+            "You have a unique approach to challenges! 🔑",
+            "You're a joy to be around! 🌈",
+            "You have an incredible work ethic! 🏋️",
+            "You are a true friend! 🤗",
+            "You have a heart of gold! 💛",
+            "You're an inspiration to everyone! 🌟",
+            "You make the ordinary extraordinary! ✨",
+            "You have a beautiful mind! 🧠",
+            "You have a unique perspective on life! 👀",
+            "You're a true original! 🎨",
+            "You're a creative genius! 🧠",
+            "You're a wonderful person! 😊",
+            "You have a great sense of timing! ⏰",
+            "You have a gift for storytelling! 📖",
+            "You're a true professional! 🧑‍💼",
+            "You have an incredible imagination! 🌈",
+            "You're a natural leader! 👩‍💼",
+            "You have a way of making things happen! 🚀",
+            "You're a bright spot in my day! 🌞",
+            "You have a great sense of justice! ⚖️",
+            "You're a true survivor! 💪",
+            "You're a fantastic problem solver! 🧩",
+            "You have a heart full of compassion! 💖",
+            "You have an amazing ability to uplift others! 🌟",
+            "You have a knack for making people laugh! 😂",
+            "You are a ray of sunshine! ☀️",
+            "You're a true friend! 🤗",
+            "You have a unique perspective on life! 🌍",
+            "You're a wonderful collaborator! 🤝",
+            "You have a great sense of adventure! 🧗",
+            "You're a true innovator! 💡",
+            "You have a beautiful spirit! 🌸",
+            "You're a fantastic teammate! 🏆",
+            "You have a great sense of timing! ⏰",
+            "You're a true inspiration! 🌟"
+        ];
 
-    const jokes = [
-      { setup: "Why did the computer go to the doctor?", punchline: "Because it had a virus!" },
-      { setup: "Why don’t robots get tired?", punchline: "Because they recharge their batteries!" },
-      { setup: "Why did the cookie go to the gym?", punchline: "To get a little crunchier." },
-      { setup: "What do you call a bear with no teeth?", punchline: "A gummy bear." },
-      { setup: "Why did the math book look sad?", punchline: "Because it had too many problems." },
-      { setup: "What do you call cheese that isn’t yours?", punchline: "Nacho cheese." },
-      { setup: "Why did the scarecrow get a promotion?", punchline: "Because he was outstanding in his field." },
-      { setup: "What do you call a sleeping dinosaur?", punchline: "A dino-snore." },
-      { setup: "Why did the bicycle fall over?", punchline: "Because it was two-tired." },
-      { setup: "What did one wall say to the other wall?", punchline: "I’ll meet you at the corner." },
+        const state = {
+            favorites: [],
+            totalGenerated: 0,
+        };
 
-      { one: "I told my keyboard a joke… it couldn’t stop typing with laughter." },
-      { one: "I’m reading a book on anti-gravity. It’s impossible to put down." },
-      { one: "I used to be afraid of hurdles… but I got over it." },
-      { one: "If you see a crime at the Apple Store… does that make you an iWitness?" },
-      { one: "I tried to catch fog yesterday. Mist." },
+        function generateCompliment() {
+            const name = document.getElementById('name').value;
+            const recipient = document.getElementById('recipient').value;
+            const tone = document.getElementById('tone').value;
+            const focus = document.getElementById('focus').value;
 
-      { setup: "Why did the tomato blush?", punchline: "Because it saw the salad dressing!" },
-      { setup: "What do you call a factory that makes okay products?", punchline: "A satisfactory." },
-      { setup: "Why did the golfer bring an extra pair of socks?", punchline: "In case he got a hole in one." },
-      { setup: "What do you call a boomerang that doesn’t come back?", punchline: "A stick." },
-      { setup: "Why do cows have bells?", punchline: "Because their horns don’t work." },
-
-      { one: "My pencil broke… but it’s okay. There’s no point." },
-      { one: "I told a joke about a roof… but it went over everyone’s head." },
-      { one: "I tried to write a joke about time travel… but you didn’t like it." },
-      { one: "Parallel lines have so much in common. It’s a shame they’ll never meet." },
-      { one: "My calendar’s days are numbered." },
-
-      { setup: "Why did the phone wear glasses?", punchline: "Because it lost its contacts." },
-      { setup: "What do you call an alligator in a vest?", punchline: "An investigator." },
-      { setup: "Why did the banana go to the party?", punchline: "Because it had appeal." },
-      { setup: "What did the ocean say to the shore?", punchline: "Nothing—it just waved." },
-      { setup: "Why can’t you give Elsa a balloon?", punchline: "Because she will let it go." },
-
-      { one: "I used to be a baker… but I couldn’t make enough dough." },
-      { one: "I’m great at sleeping. I can do it with my eyes closed." },
-      { one: "I tried to organize a hide-and-seek tournament… but good players are hard to find." },
-      { one: "I told my suitcase there would be no vacation this year. Now it’s dealing with emotional baggage." },
-      { one: "I made a belt out of watches… it was a waist of time." },
-
-      { setup: "Why did the student eat their homework?", punchline: "Because the teacher said it was a piece of cake!" },
-      { setup: "What do you call a lazy kangaroo?", punchline: "A pouch potato." },
-      { setup: "Why did the astronaut break up with the moon?", punchline: "It needed space." },
-      { setup: "What do you call a snowman with a six-pack?", punchline: "An abdominal snowman." },
-      { setup: "Why did the computer sit on the floor?", punchline: "It wanted to keep an eye on its cookies." },
-
-      { one: "I’m friends with all electricians. We have good current connections." },
-      { one: "I tried to take a photo of a field of wheat… but it was too grainy." },
-      { one: "I used to play piano by ear… now I use my hands." },
-      { one: "I’m on a seafood diet. I see food and I eat it." },
-      { one: "I told a joke about a pencil… but it had no point." }
-    ];
-
-    const cornerSymbols = [
-      { type: "emoji", value: "✨" }, { type: "emoji", value: "🚀" }, { type: "emoji", value: "🎯" }, { type: "emoji", value: "🧠" },
-      { type: "emoji", value: "🔥" }, { type: "emoji", value: "🌟" }, { type: "emoji", value: "💡" }, { type: "emoji", value: "🍀" },
-      { type: "emoji", value: "🫶" }, { type: "emoji", value: "😄" }, { type: "emoji", value: "😎" }, { type: "emoji", value: "🤝" },
-      { type: "emoji", value: "🏆" }, { type: "emoji", value: "📌" }, { type: "emoji", value: "🎉" }, { type: "emoji", value: "🪄" },
-      { type: "emoji", value: "🎨" }, { type: "emoji", value: "🧩" }, { type: "emoji", value: "🌈" }, { type: "emoji", value: "⭐" },
-
-      { type: "fa", value: "fa-solid fa-wand-magic-sparkles" },
-      { type: "fa", value: "fa-solid fa-bolt" },
-      { type: "fa", value: "fa-solid fa-face-smile" },
-      { type: "fa", value: "fa-solid fa-lightbulb" },
-      { type: "fa", value: "fa-solid fa-star" },
-      { type: "fa", value: "fa-solid fa-rocket" },
-      { type: "fa", value: "fa-solid fa-heart" },
-      { type: "fa", value: "fa-solid fa-trophy" },
-      { type: "fa", value: "fa-solid fa-ghost" },
-      { type: "fa", value: "fa-solid fa-burger" },
-      { type: "fa", value: "fa-solid fa-otter" },
-      { type: "fa-solid fa-pizza-slice".includes("fa-solid") ? "fa" : "fa", value: "fa-solid fa-pizza-slice" }
-    ];
-
-    const palette = [
-      ["#ff4d6d", "#4cc9f0"],
-      ["#ffd166", "#06d6a0"],
-      ["#a78bfa", "#fb7185"],
-      ["#22c55e", "#60a5fa"],
-      ["#f97316", "#2dd4bf"],
-      ["#f43f5e", "#fde047"],
-      ["#38bdf8", "#34d399"],
-      ["#e879f9", "#60a5fa"],
-      ["#fbbf24", "#a78bfa"],
-      ["#4ade80", "#fb7185"]
-    ];
-
-    // ---------- Helpers ----------
-    function randomInt(max){ return Math.floor(Math.random() * max); }
-
-    function makeBag(items){
-      let bag = [];
-      function refill(){
-        bag = items.slice();
-        for (let i = bag.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [bag[i], bag[j]] = [bag[j], bag[i]];
+            // Simulate loading state
+            document.getElementById('compliment').innerText = "Generating... 😊";
+            setTimeout(() => {
+                const compliment = getRandomCompliment();
+                const personalizedCompliment = personalizeCompliment(compliment, name, recipient, tone, focus);
+                document.getElementById('compliment').innerText = personalizedCompliment;
+                state.totalGenerated++;
+                updateUIAfterGeneration();
+            }, 500);
         }
-      }
-      refill();
-      return {
-        next(){
-          if (bag.length === 0) refill();
-          return bag.pop();
+
+        function getRandomCompliment() {
+            return compliments[Math.floor(Math.random() * compliments.length)];
         }
-      };
-    }
 
-    const complimentBag = makeBag(compliments);
-    const jokeBag = makeBag(jokes);
+        function personalizeCompliment(compliment, name, recipient, tone, focus) {
+            const personalized = name ? `${name}, ` : '';
+            return `${personalized}${compliment} (${tone} - ${focus})`;
+        }
 
-    // ---------- UI ----------
-    const outputText = document.getElementById("outputText");
-    const modeBadge = document.getElementById("modeBadge");
-    const meta = document.getElementById("meta");
+        function updateUIAfterGeneration() {
+            document.getElementById('regenerateBtn').style.display = 'block';
+            document.getElementById('copyBtn').style.display = 'block';
+            document.getElementById('saveBtn').style.display = 'block';
+        }
 
-    const cornerTR = document.getElementById("cornerTR");
-    const cornerBL = document.getElementById("cornerBL");
+        document.getElementById('generateBtn').onclick = generateCompliment;
 
-    const btnCompliment = document.getElementById("btnCompliment");
-    const btnJoke = document.getElementById("btnJoke");
+        document.getElementById('regenerateBtn').onclick = generateCompliment;
 
-    let punchlineTimer = null;
+        document.getElementById('copyBtn').onclick = () => {
+            const complimentText = document.getElementById('compliment').innerText;
+            navigator.clipboard.writeText(complimentText)
+                .then(() => showToast())
+                .catch(err => console.error('Failed to copy: ', err));
+        };
 
-    function clearPunchline(){
-      if (punchlineTimer) {
-        clearTimeout(punchlineTimer);
-        punchlineTimer = null;
-      }
-      const p = document.getElementById("punchline");
-      if (p){
-        p.textContent = "";
-        p.classList.remove("show");
-      }
-    }
+        function showToast() {
+            const toast = document.getElementById('toast');
+            toast.style.display = 'block';
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => {
+                    toast.style.display = 'none';
+                    toast.style.opacity = '1';
+                }, 300);
+            }, 1000);
+        }
 
-    function setCorner(el, color, symbol){
-      el.style.background = `radial-gradient(circle at 30% 30%, rgba(255,255,255,0.22), rgba(255,255,255,0.08)), ${color}`;
-      if (symbol.type === "emoji") {
-        el.innerHTML = `<span>${symbol.value}</span>`;
-      } else {
-        el.innerHTML = `<i class="${symbol.value}" aria-hidden="true"></i>`;
-      }
-    }
+        document.getElementById('saveBtn').onclick = () => {
+            const complimentText = document.getElementById('compliment').innerText;
+            if (!state.favorites.includes(complimentText)) {
+                state.favorites.push(complimentText);
+                updateFavorites();
+            }
+        };
 
-    function refreshDecor(){
-      const pair = palette[randomInt(palette.length)];
-      const symA = cornerSymbols[randomInt(cornerSymbols.length)];
-      let symB = cornerSymbols[randomInt(cornerSymbols.length)];
-      if (symB.value === symA.value) symB = cornerSymbols[(randomInt(cornerSymbols.length - 1) + 1) % cornerSymbols.length];
+        function updateFavorites() {
+            const favoritesContainer = document.getElementById('favorites');
+            favoritesContainer.innerHTML = `<h3>Favorites:</h3>` + state.favorites.map((favorite, index) =>
+                `<div>${favorite} <button onclick="deleteFavorite(${index})">Delete</button></div>`
+            ).join('');
+            localStorage.setItem('favorites', JSON.stringify(state.favorites));
+        }
 
-      setCorner(cornerTR, pair[0], symA);
-      setCorner(cornerBL, pair[1], symB);
-    }
+        function deleteFavorite(index) {
+            state.favorites.splice(index, 1);
+            updateFavorites();
+        }
 
-    function animateSwap(html, badgeText){
-      outputText.classList.add("fadeOut");
-      clearPunchline();
+        function loadFavorites() {
+            const savedFavorites = localStorage.getItem('favorites');
+            if (savedFavorites) {
+                state.favorites = JSON.parse(savedFavorites);
+                updateFavorites();
+            }
+        }
 
-      setTimeout(() => {
-        outputText.innerHTML = `${html}<span class="punchline" id="punchline"></span>`;
-        modeBadge.textContent = badgeText;
-        outputText.classList.remove("fadeOut");
-      }, 220);
-    }
-
-    function showCompliment(){
-      refreshDecor();
-      const text = complimentBag.next();
-      meta.innerHTML = `<strong>Compliment mode:</strong> 100 unique compliments rotate without repeats (until cycled).`;
-      animateSwap(text, "Compliment");
-    }
-
-    function showJoke(){
-      refreshDecor();
-      const j = jokeBag.next();
-      meta.innerHTML = `<strong>Joke mode:</strong> 50 family-friendly jokes. Punchlines animate in after a moment.`;
-
-      if (j.one){
-        animateSwap(j.one, "Joke");
-        return;
-      }
-
-      animateSwap(j.setup, "Joke");
-
-      punchlineTimer = setTimeout(() => {
-        const p = document.getElementById("punchline");
-        if (!p) return;
-        p.textContent = j.punchline;
-        p.classList.add("show");
-      }, 1800);
-    }
-
-    btnCompliment.addEventListener("click", showCompliment);
-    btnJoke.addEventListener("click", showJoke);
-
-    document.addEventListener("keydown", (e) => {
-      const k = e.key.toLowerCase();
-      if (k === "c") showCompliment();
-      if (k === "j") showJoke();
-    });
-
-    refreshDecor();
-  </script>
+        window.onload = loadFavorites;
+    </script>
 </body>
 </html>
