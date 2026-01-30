@@ -79,3 +79,6 @@ Quality Bar
 
 Output Format
 Return the full, final `index.html` only—complete and ready to copy-paste and run locally in a browser.
+
+I would like to suggest to the AI, I would like to have a total of 100 unique compliments. Let's see how close it can actually get to 100. Try to make some of them funny or more unique, keeping the humor family-friendly, of course. And I would like the box not to change sizes for different compliments. Maybe it should be taller vertically instead of horizontally. And lastly, it is also pretty boring visually. Can you figure out a way to make it more interesting, either with animations, gradients, images, or emojis, or something like that
+I would like the box to be vertically taller, it still is changing sizes with each compliment. I would still like it to be more visually interesting than this
