@@ -136,11 +136,10 @@
       -webkit-backdrop-filter: blur(14px);
       box-shadow: var(--shadow);
       position: relative;
-      overflow: hidden; /* keeps outside circles clipped nicely */
+      overflow: hidden;
       transform: translateZ(0);
     }
 
-    /* subtle card texture */
     .card::before{
       content:"";
       position:absolute;
@@ -154,37 +153,14 @@
       z-index: 0;
     }
 
-    /* ✅ FIXED: Corner badges pushed outside so they don't collide with content */
-    .corner{
-      position:absolute;
-      width: 86px;
-      height: 86px;
-      border-radius: 50%;
-      display:grid;
-      place-items:center;
-      box-shadow:
-        0 12px 24px rgba(0,0,0,0.30),
-        0 0 0 1px rgba(255,255,255,0.18) inset;
-      user-select:none;
-      z-index: 1; /* behind content */
-      opacity: .95;
-      transform: translateZ(0);
-    }
+    /* ✅ REMOVE circles entirely */
+    .corner { display: none !important; }
 
-    .corner.top-right{ top: -20px; right: -20px; }
-    .corner.bottom-left{ bottom: -20px; left: -20px; }
-
-    .corner i, .corner span{
-      font-size: 26px;
-      filter: drop-shadow(0 8px 18px rgba(0,0,0,0.28));
-    }
-
-    /* Content layout inside the card */
     .card-inner{
       position: relative;
       z-index: 2;
       height: 100%;
-      padding: 18px; /* ✅ improved breathing room */
+      padding: 18px;
       display: grid;
       grid-template-rows: auto auto 1fr auto;
       gap: 12px;
@@ -195,7 +171,6 @@
       align-items:center;
       justify-content: space-between;
       gap: 10px;
-      padding-right: 0; /* ✅ FIX: no reserve space needed now */
     }
 
     .stats{
@@ -283,7 +258,6 @@
     }
 
     .card-footer{
-      padding-left: 0; /* ✅ FIX: no reserve needed */
       color: rgba(255,255,255,.66);
       font-size: 12px;
       line-height: 1.4;
@@ -414,14 +388,12 @@
 
       <h1>Compliment &amp; Joke Card</h1>
       <p class="subtitle">
-        Generate uplifting compliments or family-friendly jokes—wrapped in a playful, fixed-size playing card with changing corner badges.
+        Generate uplifting compliments or family-friendly jokes—wrapped in a playful, fixed-size playing card.
       </p>
 
       <!-- Card -->
       <section class="card" aria-live="polite">
-        <div class="corner top-right" id="cornerTR" aria-hidden="true"></div>
-        <div class="corner bottom-left" id="cornerBL" aria-hidden="true"></div>
-
+        <!-- circles removed -->
         <div class="card-inner">
           <div class="card-header">
             <div class="stats">
@@ -443,7 +415,7 @@
           </div>
 
           <div class="card-footer" id="cardFooter">
-            Fixed-size card • Smooth punchlines • Corners change each time
+            Fixed-size card • Smooth punchlines • Clean layout
           </div>
         </div>
       </section>
@@ -661,29 +633,6 @@
       { one: "I asked the librarian about books on paranoia… she whispered: ‘They’re right behind you.’" }
     ];
 
-    const cornerSymbols = [
-      { type: "emoji", value: "✨" }, { type: "emoji", value: "🚀" }, { type: "emoji", value: "🎯" }, { type: "emoji", value: "🧠" },
-      { type: "emoji", value: "🔥" }, { type: "emoji", value: "🌟" }, { type: "emoji", value: "💡" }, { type: "emoji", value: "🍀" },
-      { type: "emoji", value: "🫶" }, { type: "emoji", value: "😄" }, { type: "emoji", value: "😎" }, { type: "emoji", value: "🤝" },
-      { type: "emoji", value: "🏆" }, { type: "emoji", value: "📌" }, { type: "emoji", value: "🎉" }, { type: "emoji", value: "🪄" },
-      { type: "fa", value: "fa-solid fa-code" },
-      { type: "fa", value: "fa-solid fa-wand-magic-sparkles" },
-      { type: "fa", value: "fa-solid fa-lightbulb" },
-      { type: "fa", value: "fa-solid fa-trophy" },
-      { type: "fa", value: "fa-solid fa-heart" },
-      { type: "fa", value: "fa-solid fa-star" }
-    ];
-
-    const palette = [
-      ["#ff4d6d", "#4cc9f0"],
-      ["#ffd166", "#06d6a0"],
-      ["#a78bfa", "#fb7185"],
-      ["#22c55e", "#60a5fa"],
-      ["#f97316", "#2dd4bf"],
-      ["#38bdf8", "#34d399"],
-      ["#e879f9", "#60a5fa"]
-    ];
-
     const randomInt = (max) => Math.floor(Math.random() * max);
 
     function makeBag(items){
@@ -715,8 +664,6 @@
     let lastTextForCopy = "";
 
     // elements
-    const cornerTR = document.getElementById("cornerTR");
-    const cornerBL = document.getElementById("cornerBL");
     const modeTitle = document.getElementById("modeTitle");
     const modeDesc = document.getElementById("modeDesc");
     const outputText = document.getElementById("outputText");
@@ -733,23 +680,6 @@
     const btnJoke = document.getElementById("btnJoke");
     const btnCopy = document.getElementById("btnCopy");
     const btnSave = document.getElementById("btnSave");
-
-    function setCorner(el, color, symbol){
-      el.style.background =
-        `radial-gradient(circle at 30% 30%, rgba(255,255,255,0.22), rgba(255,255,255,0.08)), ${color}`;
-      if (symbol.type === "emoji") el.innerHTML = `<span>${symbol.value}</span>`;
-      else el.innerHTML = `<i class="${symbol.value}" aria-hidden="true"></i>`;
-    }
-
-    function refreshDecor(){
-      const pair = palette[randomInt(palette.length)];
-      const symA = cornerSymbols[randomInt(cornerSymbols.length)];
-      let symB = cornerSymbols[randomInt(cornerSymbols.length)];
-      if (symB.value === symA.value) symB = cornerSymbols[(randomInt(cornerSymbols.length - 1) + 1) % cornerSymbols.length];
-
-      setCorner(cornerTR, pair[0], symA);
-      setCorner(cornerBL, pair[1], symB);
-    }
 
     function clearPunchline(){
       if (punchTimer) clearTimeout(punchTimer);
@@ -803,7 +733,6 @@
     }
 
     function showCompliment(){
-      refreshDecor();
       incTotal();
       modeTitle.textContent = "Compliment";
       modeDesc.textContent = "Uplifting, family-friendly compliments. No resizing.";
@@ -815,7 +744,6 @@
     }
 
     function showJoke(){
-      refreshDecor();
       incTotal();
       modeTitle.textContent = "Joke";
       modeDesc.textContent = "Family-friendly humor. Punchlines appear after a beat when available.";
@@ -892,9 +820,6 @@
       if (k === "c") showCompliment();
       if (k === "j") showJoke();
     });
-
-    // init
-    refreshDecor();
   </script>
 </body>
 </html>
